@@ -5,13 +5,22 @@ extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
 
-mod exchange_client;
 mod gdax_client;
 
-use std::time::SystemTime;
+use std::time::{SystemTime, Duration};
+use std::thread;
 
 fn main() {
-    let rx_chan = gdax_client::start_receiver_thread("wss://ws-feed.gdax.com", vec!["BTC-USD"]);
+    // Start a mark time thread, spins and reports what time it is.
+    thread::spawn(|| {
+        loop {
+            println!("{:?}", SystemTime::now());
+            thread::sleep(Duration::from_secs(300));
+        }
+    });
+
+    let rx_chan = gdax_client::start_receiver_thread("wss://ws-feed.gdax.com",
+                                                     vec![String::from("BTC-USD")]);
 
     let mut price_accum = 0.0;
     let mut msg_count = 0;
@@ -29,6 +38,5 @@ fn main() {
             }
             start_time = SystemTime::now();
         }
-
     }
 }
